@@ -2,6 +2,10 @@
 
 <!-- start-here-sphinx-start-after -->
 
+## 2.115.0 (2024-06-25)
+
+- CO3 internal change, allow remapping platform name using the config.platform_mapping key "name".
+
 ## 2.114.1 (2023-12-09)
 [Source](https://github.com/AcademySoftwareFoundation/rez/tree/2.114.1) | [Diff](https://github.com/AcademySoftwareFoundation/rez/compare/2.114.0...2.114.1)
 
