@@ -120,6 +120,9 @@ class Platform(object):
 
     # -- implementation
 
+    def _name(self):
+        return platform.system().lower()
+
     def _arch(self):
         return platform.machine()
 
