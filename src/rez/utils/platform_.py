@@ -19,11 +19,16 @@ from tempfile import gettempdir
 class Platform(object):
     """Abstraction of a platform.
     """
-    name = None
 
     def __init__(self):
         pass
 
+    @cached_property
+    @platform_mapped
+    def name(self):
+        """Returns the name of the platform."""
+        return self._name()
+    
     @cached_property
     @platform_mapped
     def arch(self):
@@ -183,7 +188,7 @@ class _UnixPlatform(Platform):
 # -----------------------------------------------------------------------------
 
 class LinuxPlatform(_UnixPlatform):
-    name = "linux"
+    # name = "linux"
 
     def _os(self):
         """
@@ -410,7 +415,7 @@ class LinuxPlatform(_UnixPlatform):
 # -----------------------------------------------------------------------------
 
 class OSXPlatform(_UnixPlatform):
-    name = "osx"
+    # name = "osx"
 
     def _os(self):
         release = platform.mac_ver()[0]
@@ -463,7 +468,7 @@ class OSXPlatform(_UnixPlatform):
 # -----------------------------------------------------------------------------
 
 class WindowsPlatform(Platform):
-    name = "windows"
+    # name = "windows"
 
     def _arch(self):
         # http://stackoverflow.com/questions/7164843/in-python-how-do-you-determine-whether-the-kernel-is-running-in-32-bit-or-64-bi
