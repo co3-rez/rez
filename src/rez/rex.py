@@ -222,7 +222,13 @@ class ActionManager(object):
             ('undefined', self.undefined)]
 
     def _env_sep(self, name):
-        return self._env_sep_map.get(name, self.interpreter.pathsep)
+        return self.interpreter.env_sep_map.get(
+            name,
+            self._env_sep_map.get(
+                name,
+                self.interpreter.pathsep
+            )
+        )
 
     def _is_verbose(self, command):
         if isinstance(self.verbose, (list, tuple)):
@@ -249,7 +255,23 @@ class ActionManager(object):
         def _fn(str_):
             str_ = expandvars(str_, self.environ)
             str_ = expandvars(str_, self.parent_environ)
-            return os.path.expanduser(str_)
+            if platform_.name != "windows":
+                return os.path.expanduser(str_)
+            else:
+                if os.path.exists(os.path.expanduser(str_)):
+                    return os.path.expanduser(str_)
+
+                # Expand user only if the str is path-like
+                # otherwise it could potentially be a weak reference `~`
+                # in a request string which python on windows will expand
+                # regardless if the user exists or not
+                matches = re.findall(r"[\\/]?", str_)
+                matches = list(set(matches))
+                matches.remove("")
+                if matches:
+                    return os.path.expanduser(str_)
+                else:
+                    return str_
 
         return EscapedString.promote(value).formatted(_fn)
 
@@ -467,6 +489,12 @@ class ActionInterpreter(object):
     #
     pathsep = os.pathsep
 
+    # Path separator mapping. There are cases (eg gitbash - git for windows) where
+    # the path separator changes based on the variable
+    # (eg "PATH": ":", and "PYTHONPATH": ";")
+    #
+    env_sep_map = {}
+
     # RegEx that captures environment variables (generic form).
     # Extend/override to regex formats that can capture environment formats
     # in other interpreters like shells if needed
@@ -532,7 +560,7 @@ class ActionInterpreter(object):
 
     # --- other
 
-    def escape_string(self, value, is_path=False):
+    def escape_string(self, value, is_path=False, is_shell_path=False):
         """Escape a string.
 
         Escape the given string so that special characters (such as quotes and
@@ -550,6 +578,7 @@ class ActionInterpreter(object):
         Args:
             value (str or `EscapedString`): String to escape.
             is_path (bool): True if the value is path-like.
+            is_shell_path (bool): True if the value is a shell-path.
 
         Returns:
             str: The escaped string.
@@ -559,6 +588,16 @@ class ActionInterpreter(object):
     @classmethod
     def _is_pathed_key(cls, key):
         return any(fnmatch(key, x) for x in config.pathed_env_vars)
+
+    @classmethod
+    def _is_shell_pathed_key(cls, key):
+        shell_name = cls.name()
+        if shell_name not in config.shell_pathed_env_vars:
+            return False
+
+        return any(
+            fnmatch(key, x) for x in config.shell_pathed_env_vars[shell_name]
+        )
 
     def normalize_path(self, path):
         """Normalize a path.
@@ -586,6 +625,9 @@ class ActionInterpreter(object):
 
         Note that `value` may be more than one pathsep-delimited paths.
         """
+        # Prevent path conversion if normalization is disabled in the config.
+        if not config.enable_path_normalization:
+            return value
         paths = value.split(self.pathsep)
         paths = [self.normalize_path(x) for x in paths]
         return self.pathsep.join(paths)
@@ -789,6 +831,45 @@ class Python(ActionInterpreter):
             return
 
         env['SYSTEMROOT'] = os.environ['SYSTEMROOT']
+
+    def as_path(self, path):
+        """
+        Return the given path as a system path.
+        Used if the path needs to be reformatted to suit a specific case.
+        Args:
+            path (str): File path.
+
+        Returns:
+            (str): Transformed file path.
+        """
+        return path
+
+    def as_shell_path(self, path):
+        """
+        Return the given path as a shell path.
+        Used if the shell requires a different pathing structure.
+
+        Args:
+            path (str): File path.
+
+        Returns:
+            (str): Transformed file path.
+        """
+        return path
+
+    def normalize_path(self, path):
+        """
+        Normalize the path to fit the environment.
+        For example, POSIX paths, Windows path, etc. If no transformation is
+        necessary, just return the path.
+
+        Args:
+            path (str): File path.
+
+        Returns:
+            (str): Normalized file path.
+        """
+        return path
 
 
 #===============================================================================
@@ -1346,6 +1427,8 @@ class RexExecutor(object):
         Returns:
             str: The normalized path.
         """
+        if not config.enable_path_normalization:
+            return path
         return self.interpreter.normalize_path(path)
 
     @classmethod
