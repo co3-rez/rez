@@ -2,7 +2,6 @@
 # Copyright Contributors to the Rez Project
 
 
-from __future__ import absolute_import
 from rez import __version__
 from rez.utils.data_utils import AttrDictWrapper, RO_AttrDictWrapper, \
     convert_dicts, cached_property, cached_class_property, LazyAttributeMeta, \
@@ -15,18 +14,14 @@ from rez import module_root_path
 from rez.system import system
 from rez.vendor.schema.schema import Schema, SchemaError, And, Or, Use
 from rez.vendor import yaml
-from rez.vendor.six import six
 from rez.vendor.yaml.error import YAMLError
-from rez.backport.lru_cache import lru_cache
 import rez.deprecations
 from contextlib import contextmanager
+from functools import lru_cache
 from inspect import ismodule
 import os
 import re
 import copy
-
-
-basestring = six.string_types[0]
 
 
 class _Deprecation(object):
@@ -117,7 +112,7 @@ class Setting(object):
                         pre_formatted=True,
                         filename=varname,
                     )
-                from rez.utils import json
+                import json
 
                 try:
                     return json.loads(value)
@@ -140,25 +135,25 @@ class Setting(object):
 
 
 class Str(Setting):
-    schema = Schema(basestring)
+    schema = Schema(str)
 
     def _parse_env_var(self, value):
         return value
 
 
 class Char(Setting):
-    schema = Schema(basestring, lambda x: len(x) == 1)
+    schema = Schema(str, lambda x: len(x) == 1)
 
     def _parse_env_var(self, value):
         return value
 
 
 class OptionalStr(Str):
-    schema = Or(None, basestring)
+    schema = Or(None, str)
 
 
 class StrList(Setting):
-    schema = Schema([basestring])
+    schema = Schema([str])
     sep = ','
 
     def _parse_env_var(self, value):
@@ -190,7 +185,7 @@ class PipInstallRemaps(Setting):
 
 class OptionalStrList(StrList):
     schema = Or(And(None, Use(lambda x: [])),
-                [basestring])
+                [str])
 
 
 class PathList(StrList):
@@ -328,7 +323,7 @@ class ExecutableScriptMode_(Str):
 
 
 class OptionalStrOrFunction(Setting):
-    schema = Or(None, basestring, callable)
+    schema = Or(None, str, callable)
 
     def _parse_env_var(self, value):
         # note: env-var override only supports string, eg 'mymodule.preprocess_func'
@@ -404,6 +399,7 @@ config_schema = Schema({
     "release_packages_path":                        Str,
     "dot_image_format":                             Str,
     "build_directory":                              Str,
+    "default_build_process":                        Str,
     "documentation_url":                            Str,
     "suite_visibility":                             SuiteVisibility_,
     "rez_tools_visibility":                         RezToolsVisibility_,
@@ -457,10 +453,10 @@ config_schema = Schema({
     "package_cache_max_variant_days":               Int,
     "package_cache_clean_limit":                    Float,
     "allow_unversioned_packages":                   Bool,
-    "rxt_as_yaml":                                  Bool,
     "package_cache_during_build":                   Bool,
     "package_cache_local":                          Bool,
     "package_cache_same_device":                    Bool,
+    "package_cache_async":                          Bool,
     "color_enabled":                                ForceOrBool,
     "resolve_caching":                              Bool,
     "cache_package_files":                          Bool,
@@ -493,13 +489,12 @@ config_schema = Schema({
     "default_relocatable":                          Bool,
     "set_prompt":                                   Bool,
     "prefix_prompt":                                Bool,
+    # Note that if you want to remove a warn_* or debug_* config, you will
+    # need to search for "config.warn(" or "config.debug(" to see if it's used.
     "warn_old_commands":                            Bool,
     "error_old_commands":                           Bool,
     "debug_old_commands":                           Bool,
-    "warn_commands2":                               Bool,
-    "error_commands2":                              Bool,
     "rez_1_environment_variables":                  Bool,
-    "rez_1_cmake_variables":                        Bool,
     "disable_rez_1_compatibility":                  Bool,
     "make_package_temporarily_writable":            Bool,
     "read_package_cache":                           Bool,
@@ -524,32 +519,18 @@ config_schema = Schema({
 # List of settings that are deprecated and should raise
 # deprecation warnings if referenced in config files.
 _deprecated_settings = {
-    "rxt_as_yaml": _Deprecation("3.0.0"),
     "warn_old_commands": _Deprecation("the future"),
     "error_old_commands": _Deprecation("the future"),
-    # Remove in 3.0 because it's currently a no-op
-    "debug_old_commands": _Deprecation("3.0.0"),
-    # Remove in 3.0 because it's currently a no-op
-    "warn_commands2": _Deprecation("3.0.0"),
-    # Remove in 3.0 because it's currently a no-op
-    "error_commands2": _Deprecation("3.0.0"),
-    "rez_1_environment_variables": _Deprecation(
-        "the future",
-        extra="Additionally, it will become disabled by default in 3.0.0.",
-    ),
-    "rez_1_cmake_variables": _Deprecation("3.0.0"),
-    "disable_rez_1_compatibility": _Deprecation(
-        "the future",
-        extra="Additionally, it will become enabled by default in 3.0.0.",
-    )
+    "rez_1_environment_variables": _Deprecation("the future"),
+    "disable_rez_1_compatibility": _Deprecation("the future")
 }
 
 
 # settings common to each plugin type
 _plugin_config_dict = {
     "release_vcs": {
-        "tag_name":                     basestring,
-        "releasable_branches":          Or(None, [basestring]),
+        "tag_name":                     str,
+        "releasable_branches":          Or(None, [str]),
         "check_tag":                    bool
     }
 }
@@ -559,7 +540,7 @@ _plugin_config_dict = {
 # Config
 # -----------------------------------------------------------------------------
 
-class Config(six.with_metaclass(LazyAttributeMeta, object)):
+class Config(object, metaclass=LazyAttributeMeta):
     """Rez configuration settings.
 
     You should call the `create_config` function, rather than constructing a
@@ -715,7 +696,7 @@ class Config(six.with_metaclass(LazyAttributeMeta, object)):
             return []
         else:
             keys = (
-                [x for x in self._schema_keys if isinstance(x, basestring)]
+                [x for x in self._schema_keys if isinstance(x, str)]
                 + ["plugins"]
             )
             keys = [x for x in keys if x.startswith(prefix)]
@@ -789,7 +770,7 @@ class Config(six.with_metaclass(LazyAttributeMeta, object)):
         return Config(filepaths, overrides)
 
     def __str__(self):
-        keys = (x for x in self.schema._schema if isinstance(x, basestring))
+        keys = (x for x in self.schema._schema if isinstance(x, str))
         return "%r" % sorted(list(keys) + ["plugins"])
 
     def __repr__(self):
@@ -915,7 +896,7 @@ class _PluginConfigs(object):
 def expand_system_vars(data):
     """Expands any strings within `data` such as '{system.user}'."""
     def _expanded(value):
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = expandvars(value)
             value = expanduser(value)
             return scoped_format(value, system=system)

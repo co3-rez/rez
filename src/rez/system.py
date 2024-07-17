@@ -65,7 +65,8 @@ class System(object):
         """Get the current shell.
 
         Returns:
-            The current shell this process is running in (bash, tcsh, pwsh, etc).
+            The current shell this process is running in (bash, tcsh, pwsh, etc). On Windows,
+            the return value is always "powershell".
         """
         from rez.shells import get_shell_types
         shells = set(get_shell_types())
@@ -73,19 +74,23 @@ class System(object):
             raise RezSystemError("no shells available")
 
         if self.platform == "windows":
-            return "cmd"
+            return "powershell"
         else:
             import subprocess as sp
             shell = None
 
-            # check parent process via ps
-            try:
-                args = ['ps', '-o', 'args=', '-p', str(os.getppid())]
-                proc = sp.Popen(args, stdout=sp.PIPE)
-                output = proc.communicate()[0]
-                shell = os.path.basename(output.strip().split()[0]).replace('-', '')
-            except Exception:
-                pass
+            parent_pid = os.getppid()
+            if parent_pid != 0:
+                # When run from inside docker without an interactive shell,
+                # the parent pid will be 0, which will cause "ps" to
+                # print an error message: "process ID out of range".
+                try:
+                    args = ['ps', '-o', 'args=', '-p', str(parent_pid)]
+                    proc = sp.Popen(args, stdout=sp.PIPE, text=True)
+                    output = proc.communicate()[0]
+                    shell = os.path.basename(output.strip().split()[0]).replace('-', '')
+                except Exception:
+                    pass
 
             # check $SHELL
             if shell not in shells:
@@ -93,7 +98,7 @@ class System(object):
 
             # traverse parent procs via /proc/(pid)/status
             if shell not in shells:
-                pid = str(os.getppid())
+                pid = str(parent_pid)
                 found = False
 
                 while not found:

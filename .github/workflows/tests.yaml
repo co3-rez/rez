@@ -3,12 +3,20 @@ on:
   pull_request:
     paths:
     - 'src/**'
+    - 'install.py'
+    - 'setup.py'
+    - 'MANIFEST.in'
+    - 'pyproject.toml'
     - '.github/workflows/tests.yaml'
     - '!src/rez/utils/_version.py'
     - '!**.md'
   push:
     paths:
     - 'src/**'
+    - 'install.py'
+    - 'setup.py'
+    - 'MANIFEST.in'
+    - 'pyproject.toml'
     - '.github/workflows/tests.yaml'
     - '!src/rez/utils/_version.py'
     - '!**.md'
@@ -17,6 +25,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   core:
@@ -27,7 +38,7 @@ jobs:
     strategy:
       matrix:
         os: ['macos-latest', 'ubuntu-latest', 'windows-latest']
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
         include:
         - os: macos-latest
           shells: 'sh,csh,bash,tcsh,zsh,pwsh'
@@ -38,15 +49,21 @@ jobs:
         - os: windows-latest
           shells: 'cmd,pwsh,gitbash'
           rez-path: \installdir\Scripts\rez
+        # Python 3.7 is not supported on Apple Silicon.
+        # macos-13 is the last macos runner image to run on Intel CPUs.
+        - os: macos-13
+          shells: 'sh,csh,bash,tcsh,zsh,pwsh'
+          rez-path: /installdir/bin/rez
+          python-version: '3.7'
 
       fail-fast: false
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     - name: Setup python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -75,6 +92,17 @@ jobs:
       run: rez-python -m pip install pytest-cov parameterized
 
     - name: Run tests
-      run: rez-selftest -v
+      id: tests
+      run: rez-selftest -v -- --cov=rez --cov-report=xml:coverage.xml
       env:
         _REZ_ENSURE_TEST_SHELLS: ${{ matrix.shells }}
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0
+      # Run on both success and failure, but only if coverage.xml exists.
+      if: ${{ hashFiles('coverage.xml') != '' && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') }}
+      with:
+        slug: AcademySoftwareFoundation/rez
+        files: 'coverage.xml'
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -4,12 +4,13 @@
 [![Mailing List](https://img.shields.io/badge/rez--discussion-lists.aswf.io-003366?style=flat-square&logo=linuxfoundation)](https://lists.aswf.io/g/rez-discussion)
 [![Slack](https://img.shields.io/badge/Slack-ASWF_%23rez-7a6800?style=flat-square&logo=slack)](https://slack.aswf.io/)
 [![Contributing Guidelines](https://img.shields.io/badge/rez-Contributing%20Guidelines-0b610e?style=flat-square&logo=github)](https://github.com/AcademySoftwareFoundation/rez/blob/main/CONTRIBUTING.md)<br>
-[![Tests](https://github.com/AcademySoftwareFoundation/rez/workflows/tests/badge.svg?branch=main)](https://github.com/AcademySoftwareFoundation/rez/actions?query=workflow%3Atests+branch%3Amain)
-[![Installation](https://github.com/AcademySoftwareFoundation/rez/workflows/installation/badge.svg?branch=main)](https://github.com/AcademySoftwareFoundation/rez/actions?query=workflow%3Ainstallation+branch%3Amain)
-[![Flake8](https://github.com/AcademySoftwareFoundation/rez/workflows/flake8/badge.svg?branch=main)](https://github.com/AcademySoftwareFoundation/rez/actions?query=workflow%3Aflake8+branch%3Amain)
+[![Tests](https://github.com/AcademySoftwareFoundation/rez/actions/workflows/tests.yaml/badge.svg)](https://github.com/AcademySoftwareFoundation/rez/actions/workflows/tests.yaml)
+[![Installation](https://github.com/AcademySoftwareFoundation/rez/actions/workflows/installation.yaml/badge.svg)](https://github.com/AcademySoftwareFoundation/rez/actions/workflows/installation.yaml)
+[![Flake8](https://github.com/AcademySoftwareFoundation/rez/actions/workflows/flake8.yaml/badge.svg)](https://github.com/AcademySoftwareFoundation/rez/actions/workflows/flake8.yaml)
 [![Docs](https://readthedocs.org/projects/rez/badge/?version=stable)](https://rez.readthedocs.io/en/stable)
 [![PyPI](https://github.com/AcademySoftwareFoundation/rez/workflows/pypi/badge.svg)](https://github.com/AcademySoftwareFoundation/rez/actions?query=workflow%3Apypi+event%3Arelease)
 [![Benchmark](https://github.com/AcademySoftwareFoundation/rez/workflows/benchmark/badge.svg)](https://github.com/AcademySoftwareFoundation/rez/actions?query=workflow%3Abenchmark+event%3Arelease)<br>
+[![Coverage](https://codecov.io/gh/AcademySoftwareFoundation/rez/graph/badge.svg?token=FLYggQOE7W)](https://codecov.io/gh/AcademySoftwareFoundation/rez)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_rez&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=AcademySoftwareFoundation_rez)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_rez&metric=bugs)](https://sonarcloud.io/summary/new_code?id=AcademySoftwareFoundation_rez)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_rez&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=AcademySoftwareFoundation_rez)
@@ -207,6 +208,17 @@ like any other package:
 * Has a package filtering feature, allowing for staged package releases such as
   alpha and beta packages.
 
+## You have a problem or want to talk to us?
+
+If you find a bug, need help, or want to talk to the developers, here is a list of the different
+ways to get in touch with us:
+
+* [Report an issue](https://github.com/AcademySoftwareFoundation/rez/issues)
+* [Chat room](https://slack.aswf.io): Join the ``#rez`` channel
+* [Start a discussion](https://github.com/AcademySoftwareFoundation/rez/discussions)
+* [Mailing list](mail:main@lists.aswf.io): Note that are way less active on the mailing
+  list than on any other communication channel.
+
 ## Known issues and limitations
 
 * Currently CMake builds do not function on Windows with Rez and
@@ -214,4 +226,3 @@ like any other package:
   the roadmap. Users have successfully implemented workarounds to utilize
   CMake with Rez under Windows, but the goal is to provide a seamless experience
   on any platform in the future. For details see this [issue](/../../issues/703)
-

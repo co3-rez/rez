@@ -5,23 +5,18 @@
 """
 Utility functions for bind modules.
 """
-from __future__ import absolute_import
 from rez.version import Version
 from rez.exceptions import RezBindError
 from rez.config import config
 from rez.util import which
 from rez.utils.execution import Popen
 from rez.utils.logging_ import print_debug
-from rez.vendor.six import six
-from rez.utils.py23 import quote
+from shlex import quote
 import subprocess
 import os.path
 import os
 import platform
 import sys
-
-
-basestring = six.string_types[0]
 
 
 def log(msg):
@@ -100,7 +95,7 @@ def extract_version(exepath, version_arg, word_index=-1, version_rank=3):
     Returns:
         `Version` object.
     """
-    if isinstance(version_arg, basestring):
+    if isinstance(version_arg, str):
         version_arg = [version_arg]
     args = [exepath] + version_arg
 

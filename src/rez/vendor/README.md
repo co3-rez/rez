@@ -27,12 +27,12 @@ tested.
 <tr><td>
 argcomplete
 </td><td>
-?
+6f943d76400d6755c2152deff4f2c5c5fa4d9e7c (Jul 20, 2014)
 </td><td>
 Apache 2.0
 </td><td>
 https://github.com/kislyuk/argcomplete<br>
-Our version seems patched.
+Our version is patched.
 </td></tr>
 
 <!-- ######################################################### -->
@@ -149,7 +149,7 @@ Added (July 2019) to enable PEP440 compatible versions handling.
 <tr><td>
 pika
 </td><td>
-1.2.0
+1.2.0 (Feb 5, 2021)
 </td><td>
 BSD 3-Clause
 </td><td>

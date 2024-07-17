@@ -2,21 +2,15 @@
 # Copyright Contributors to the Rez Project
 
 
-from __future__ import print_function
-
 from rez.packages import iter_packages
 from rez.config import config
 from rez.rex_bindings import VersionBinding
 from rez.utils.execution import Popen
 from rez.utils.backcompat import convert_old_command_expansions
 from rez.utils.scope import scoped_formatter
-from rez.vendor.six import six
 from rez.system import system
 import webbrowser
 import sys
-
-
-basestring = six.string_types[0]
 
 
 class PackageHelp(object):
@@ -49,7 +43,7 @@ class PackageHelp(object):
 
         if package:
             help_ = package.help
-            if isinstance(help_, basestring):
+            if isinstance(help_, str):
                 sections = [["Help", help_]]
             elif isinstance(help_, list):
                 sections = help_

@@ -5,14 +5,12 @@
 """
 Utilities related to formatting output or translating input.
 """
-from __future__ import absolute_import
-
 from string import Formatter
-from rez.vendor.enum import Enum
 from rez.version import Requirement
 from rez.exceptions import PackageRequestError
-from rez.vendor.six import six
 from pprint import pformat
+from enum import Enum
+import math
 import os
 import os.path
 import re
@@ -117,16 +115,7 @@ class ObjectStringFormatter(Formatter):
             if value is None:
                 return ''
             elif isinstance(value, list):
-                def _str(x):
-                    if six.PY2:
-                        if isinstance(x, unicode):
-                            return x
-                        else:
-                            return str(x)
-                    else:
-                        return str(x)
-
-                return ' '.join(map(_str, value))
+                return ' '.join(map(str, value))
 
         return Formatter.convert_field(self, value, conversion)
 
@@ -375,7 +364,9 @@ memory_divs = (
 
 
 def readable_memory_size(bytes_):
-    """Convert number of bytes into human readable form, eg '1.2 Kb'.
+    """Convert number of bytes into human-readable form.
+
+    This method rounds to 1 decimal place eg '1.2 Kb'.
     """
     return _readable_units(bytes_, memory_divs)
 
@@ -394,7 +385,8 @@ def _readable_units(value, divs, plural_aware=False):
             rounding = 0 if f > threshold else 1
             f = round(f, rounding)
             f = int(f * 10) / 10.0
-            if plural_aware and f == 1.0:
+            is_one = math.isclose(f, 1.0, rel_tol=1e-09, abs_tol=1e-09)
+            if plural_aware and is_one:
                 unit = unit[:-1]
             txt = "%g %s" % (f, unit)
             break

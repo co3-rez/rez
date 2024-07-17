@@ -5,8 +5,6 @@
 """
 Executes pre- and post-release shell commands
 """
-from __future__ import print_function
-
 import getpass
 import sys
 import os
@@ -20,26 +18,22 @@ from rez.utils.logging_ import print_debug
 from rez.utils.scope import scoped_formatter
 from rez.utils.formatting import expandvars
 from rez.vendor.schema.schema import Schema, Or, Optional, Use, And
-from rez.vendor.six import six
 from rez.util import which
-
-
-basestring = six.string_types[0]
 
 
 class CommandReleaseHook(ReleaseHook):
 
     commands_schema = Schema({
-        "command": basestring,
+        "command": str,
         Optional("args"): Or(
             And(
-                basestring,
+                str,
                 Use(lambda x: x.strip().split())
             ),
-            [basestring]
+            [str]
         ),
         Optional("pretty_args"): bool,
-        Optional("user"): basestring,
+        Optional("user"): str,
         Optional("env"): dict
     })
 
@@ -154,7 +148,7 @@ class CommandReleaseHook(ReleaseHook):
         variant_infos = []
         if variants:
             for variant in variants:
-                if isinstance(variant, six.integer_types):
+                if isinstance(variant, int):
                     variant_infos.append(variant)
                 else:
                     package = variant.parent

@@ -5,8 +5,6 @@
 """
 Sends a post-release email
 """
-from __future__ import print_function
-
 from rez.release_hook import ReleaseHook
 from rez.system import system
 from email.mime.text import MIMEText
@@ -14,23 +12,19 @@ from rez.utils.logging_ import print_warning, print_error
 from rez.utils.yaml import load_yaml
 from rez.utils.scope import scoped_formatter
 from rez.vendor.schema.schema import Or
-from rez.vendor.six import six
 import os.path
 import smtplib
-
-
-basestring = six.string_types[0]
 
 
 class EmailReleaseHook(ReleaseHook):
 
     schema_dict = {
-        "subject": basestring,
-        "body": basestring,
-        "smtp_host": basestring,
+        "subject": str,
+        "body": str,
+        "smtp_host": str,
         "smtp_port": int,
-        "sender": basestring,
-        "recipients": Or(basestring, [basestring])
+        "sender": str,
+        "recipients": Or(str, [str])
     }
 
     @classmethod

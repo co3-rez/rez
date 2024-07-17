@@ -7,7 +7,6 @@ import re
 from subprocess import PIPE
 
 from rez.config import config
-from rez.vendor.six import six
 from rez.rex import RexExecutor, OutputStyle, EscapedString
 from rez.shells import Shell, log
 from rez.system import system
@@ -201,6 +200,12 @@ class PowerShellBase(Shell):
         # Suppresses copyright message of PowerShell and pwsh
         cmd += ["-NoLogo"]
 
+        # Powershell execution policy overrides
+        # Prevent injections/mistakes by ensuring policy value only contains letters.
+        execution_policy = self.settings.execution_policy
+        if execution_policy and execution_policy.isalpha():
+            cmd += ["-ExecutionPolicy", execution_policy]
+
         # Generic form of sourcing that works in powershell and pwsh
         cmd += ["-File", target_file]
 
@@ -356,7 +361,7 @@ class PowerShellBase(Shell):
 
     @classmethod
     def join(cls, command):
-        if isinstance(command, six.string_types):
+        if isinstance(command, str):
             return command
 
         find_unsafe = re.compile(r'[^\w@%+`:,./-]').search

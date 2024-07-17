@@ -6,14 +6,10 @@ from rez.packages import iter_packages
 from rez.exceptions import ConfigurationError
 from rez.config import config
 from rez.utils.data_utils import cached_property, cached_class_property
-from rez.vendor.six import six
 from rez.version import VersionedObject, Requirement
 from hashlib import sha1
 import fnmatch
 import re
-
-
-basestring = six.string_types[0]
 
 
 class PackageFilterBase(object):
@@ -161,10 +157,8 @@ class PackageFilter(PackageFilterBase):
             result.add_inclusion(rule)
         return result
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self._excludes)
-
-    __bool__ = __nonzero__  # py3 compat
 
     @cached_property
     def cost(self):
@@ -195,7 +189,7 @@ class PackageFilter(PackageFilterBase):
         for namespace, func in (("excludes", f.add_exclusion),
                                 ("includes", f.add_inclusion)):
             rule_strs = data.get(namespace, [])
-            if isinstance(rule_strs, basestring):
+            if isinstance(rule_strs, str):
                 rule_strs = [rule_strs]
             for rule_str in rule_strs:
                 rule = Rule.parse_rule(rule_str)
@@ -308,10 +302,8 @@ class PackageFilterList(PackageFilterBase):
             data.append(f.to_pod())
         return data
 
-    def __nonzero__(self):
+    def __bool__(self):
         return any(self.filters)
-
-    __bool__ = __nonzero__  # py3 compat
 
     def __str__(self):
         filters = sorted(self.filters, key=lambda x: (x.cost, str(x)))

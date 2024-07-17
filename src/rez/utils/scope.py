@@ -2,10 +2,8 @@
 # Copyright Contributors to the Rez Project
 
 
-from __future__ import print_function
-
 from rez.utils.formatting import StringFormatMixin, StringFormatType
-from rez.vendor.six.six.moves import UserDict
+from collections import UserDict
 import sys
 
 

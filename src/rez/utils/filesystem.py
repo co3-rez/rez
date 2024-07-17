@@ -5,8 +5,6 @@
 """
 Filesystem-related utilities.
 """
-from __future__ import print_function
-
 from threading import Lock
 from tempfile import mkdtemp
 from contextlib import contextmanager
@@ -24,9 +22,9 @@ import stat
 import platform
 import uuid
 
-from rez.vendor.six import six
 from rez.utils.platform_ import platform_
-
+from rez.util import which
+from rez.utils.execution import Popen
 
 is_windows = platform.system() == "Windows"
 
@@ -216,8 +214,6 @@ def forceful_rmtree(path):
         * path length over 259 char (on Windows)
         * unicode path
     """
-    if six.PY2:
-        path = unicode(path)
 
     def _on_error(func, path, exc_info):
         try:
@@ -287,7 +283,7 @@ def replace_file_or_dir(dest, source):
 
     if not os.path.exists(dest):
         try:
-            os.rename(source, dest)
+            rename(source, dest)
             return
         except:
             if not os.path.exists(dest):
@@ -300,8 +296,8 @@ def replace_file_or_dir(dest, source):
         pass
 
     with make_tmp_name(dest) as tmp_dest:
-        os.rename(dest, tmp_dest)
-        os.rename(source, dest)
+        rename(dest, tmp_dest)
+        rename(source, dest)
 
 
 def additive_copytree(src, dst, symlinks=False, ignore=None):
@@ -575,10 +571,9 @@ def encode_filesystem_name(input_str):
 
     As an example, the string "Foo_Bar (fun).txt" would get encoded as ``_foo___bar_020_028fun_029.txt``.
     """
-    if isinstance(input_str, six.string_types):
-        input_str = unicode(input_str)
-    elif not isinstance(input_str, unicode):
-        raise TypeError("input_str must be a %s" % six.string_types[0].__name__)
+    # TODO: Test this
+    if isinstance(input_str, str):
+        input_str = input_str.encode(encoding="utf-8")
 
     as_is = u'abcdefghijklmnopqrstuvwxyz0123456789.-'
     uppercase = u'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -697,3 +692,55 @@ def windows_long_path(dos_path):
         path = "\\\\?\\" + path
 
     return path
+
+
+def rename(src, dst):
+    """Utility function to rename a file or folder src to dst with retrying.
+
+    This function uses the built-in `os.rename()` function and falls back to `robocopy` tool
+    if `os.rename` raises a `PermissionError` exception.
+
+    Args:
+        src (str): The original name (path) of the file or folder.
+        dst (str): The new name (path) for the file or folder.
+
+    Raises:
+        OSError: If renaming fails after all attempts.
+
+    """
+    # Inspired by https://github.com/conan-io/conan/blob/2.1.0/conan/tools/files/files.py#L207
+    try:
+        os.rename(src, dst)
+    except PermissionError as err:
+        if is_windows and which("robocopy") and os.path.isdir(src):
+            # https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/robocopy
+            args = [
+                "robocopy",
+                # /move Moves files and directories, and deletes them from the source after they are copied.
+                "/move",
+                # /e Copies subdirectories. Note that this option includes empty directories.
+                "/e",
+                # /ndl Specifies that directory names are not to be logged.
+                "/ndl",
+                # /nfl Specifies that file names are not to be logged.
+                "/nfl",
+                # /njs Specifies that there's no job summary.
+                "/njs",
+                # /njh Specifies that there's no job header.
+                "/njh",
+                # /np Specifies that the progress of the copying operation
+                # (the number of files or directories copied so far) won't be displayed.
+                "/np",
+                # /ns Specifies that file sizes aren't to be logged.
+                "/ns",
+                # /nc Specifies that file classes aren't to be logged.
+                "/nc",
+                src,
+                dst,
+            ]
+            process = Popen(args)
+            process.communicate()
+            if process.returncode > 7:  # https://ss64.com/nt/robocopy-exit.html
+                raise OSError("Rename {} to {} failed.".format(src, dst))
+        else:
+            raise err

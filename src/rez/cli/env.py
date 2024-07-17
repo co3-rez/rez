@@ -5,7 +5,6 @@
 '''
 Open a rez-configured shell, possibly interactive.
 '''
-from __future__ import print_function
 
 
 def setup_parser(parser, completions=False):
@@ -30,8 +29,11 @@ def setup_parser(parser, completions=False):
         help="skip loading of startup scripts")
     command_action = parser.add_argument(
         "-c", "--command", type=str,
-        help="read commands from string. Alternatively, list command arguments "
-        "after a '--'")
+        help="execute command within rez environment and exit, instead of "
+        "starting an interactive shell. Alternatively, list command after a "
+        "'--'. The command and arguments passed to '-c' must be passed in as "
+        "a single shell argument, whereas the command and arguments after "
+        "'--' may be passed in as several shell arguments.")
     parser.add_argument(
         "-s", "--stdin", action="store_true",
         help="read commands from standard input")
@@ -118,6 +120,11 @@ def setup_parser(parser, completions=False):
         "--no-pkg-cache", action="store_true",
         help="Disable package caching")
     parser.add_argument(
+        "--pkg-cache-mode", choices=["sync", "async"],
+        help="If provided, override the rezconfig's package_cache_async key. "
+             "If 'sync', the process will block until packages are cached. "
+             "If 'async', the process will not block while packages are cached.")
+    parser.add_argument(
         "--pre-command", type=str, help=SUPPRESS)
     PKG_action = parser.add_argument(
         "PKG", type=str, nargs='*',
@@ -199,6 +206,13 @@ def command(opts, parser, extra_arg_groups=None):
             rule = Rule.parse_rule(rule_str)
             package_filter.add_inclusion(rule)
 
+        if opts.pkg_cache_mode == "async":
+            package_cache_mode = True
+        elif opts.pkg_cache_mode == "sync":
+            package_cache_mode = False
+        else:
+            package_cache_mode = None
+
         # perform the resolve
         context = ResolvedContext(
             package_requests=request,
@@ -213,7 +227,8 @@ def command(opts, parser, extra_arg_groups=None):
             caching=(not opts.no_cache),
             suppress_passive=opts.no_passive,
             print_stats=opts.stats,
-            package_caching=(not opts.no_pkg_cache)
+            package_caching=(not opts.no_pkg_cache),
+            package_cache_async=package_cache_mode,
         )
 
     success = (context.status == ResolverStatus.solved)

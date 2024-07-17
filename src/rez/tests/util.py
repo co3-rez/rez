@@ -2,8 +2,6 @@
 # Copyright Contributors to the Rez Project
 
 
-from __future__ import print_function
-
 import unittest
 from rez import module_root_path
 from rez.config import config, _create_locked_config
@@ -72,6 +70,9 @@ class TestBase(unittest.TestCase):
     def tearDown(self):
         self.teardown_config()
         os.environ = self.__environ
+        # Try to clear as much caches as possible to avoid tests
+        # leaking data into each other.
+        system.clear_caches()
 
     @classmethod
     def data_path(cls, *dirs):

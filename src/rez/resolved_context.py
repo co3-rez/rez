@@ -2,8 +2,6 @@
 # Copyright Contributors to the Rez Project
 
 
-from __future__ import print_function
-
 from rez import __version__, module_root_path
 from rez.package_repository import package_repository_manager
 from rez.solver import SolverCallbackReturn
@@ -21,7 +19,7 @@ from rez.utils.filesystem import TempDirs, is_subdirectory, canonical_path
 from rez.utils.memcached import pool_memcached_connections
 from rez.utils.logging_ import print_error, print_warning
 from rez.utils.which import which
-from rez.rex import RexExecutor, Python, OutputStyle
+from rez.rex import RexExecutor, Python, OutputStyle, literal
 from rez.rex_bindings import VersionBinding, VariantBinding, \
     VariantsBinding, RequirementsBinding, EphemeralsBinding, intersects
 from rez import package_order
@@ -35,28 +33,23 @@ from rez.exceptions import ResolvedContextError, PackageCommandError, \
 from rez.utils.graph_utils import write_dot, write_compacted, \
     read_graph_from_string
 from rez.utils.resolve_graph import failure_detail_from_graph
-from rez.vendor.six import six
 from rez.version import VersionRange
 from rez.version import Requirement
-from rez.vendor.enum import Enum
 from rez.vendor import yaml
-from rez.utils import json
 from rez.utils.yaml import dump_yaml
 from rez.utils.platform_ import platform_
-import rez.deprecations
 
 from contextlib import contextmanager
 from functools import wraps
+from enum import Enum
 import getpass
+import json
 import socket
 import threading
 import time
 import sys
 import os
 import os.path
-
-
-basestring = six.string_types[0]
 
 
 class RezToolsVisibility(Enum):
@@ -174,7 +167,7 @@ class ResolvedContext(object):
                  package_filter=None, package_orderers=None, max_fails=-1,
                  add_implicit_packages=True, time_limit=-1, callback=None,
                  package_load_callback=None, buf=None, suppress_passive=False,
-                 print_stats=False, package_caching=None):
+                 print_stats=False, package_caching=None, package_cache_async=None):
         """Perform a package resolve, and store the result.
 
         Args:
@@ -212,6 +205,8 @@ class ResolvedContext(object):
             package_caching (bool|None): If True, apply package caching settings
                 as per the config. If None, enable as determined by config
                 setting :data:`package_cache_during_build`.
+            package_cache_async (bool|None): If True, cache packages asynchronously.
+                If None, use the config setting :data:`package_cache_async`
         """
         self.load_path = None
 
@@ -225,7 +220,7 @@ class ResolvedContext(object):
 
         self._package_requests = []
         for req in package_requests:
-            if isinstance(req, basestring):
+            if isinstance(req, str):
                 req = PackageRequest(req)
             self._package_requests.append(req)
 
@@ -240,7 +235,7 @@ class ResolvedContext(object):
         self.package_filter = (PackageFilterList.singleton if package_filter is None
                                else package_filter)
 
-        self.package_orderers = (
+        self.package_orderers = PackageOrderList(
             PackageOrderList.singleton if package_orderers is None
             else package_orderers
         )
@@ -253,8 +248,11 @@ class ResolvedContext(object):
                 package_caching = config.package_cache_during_build
             else:
                 package_caching = True
-
         self.package_caching = package_caching
+
+        if package_cache_async is None:
+            package_cache_async = config.package_cache_async
+        self.package_cache_async = package_cache_async
 
         # patch settings
         self.default_patch_lock = PatchLock.no_lock
@@ -587,7 +585,7 @@ class ResolvedContext(object):
             request_ = []
 
             for req in package_requests:
-                if isinstance(req, basestring):
+                if isinstance(req, str):
                     req = PackageRequest(req)
 
                 if req.name in request_dict:
@@ -659,17 +657,7 @@ class ResolvedContext(object):
         """Save the context to a buffer."""
         doc = self.to_dict()
 
-        if config.rxt_as_yaml:
-            rez.deprecations.warn(
-                "Writing the RXT file using the YAML format is deprecated. "
-                "Both this functionality and the rxt_as_yaml setting will "
-                "be removed in rez 3.0.0",
-                rez.deprecations.RezDeprecationWarning,
-            )
-            content = dump_yaml(doc)
-        else:
-            content = json.dumps(doc, indent=4, separators=(",", ": "),
-                                 sort_keys=True)
+        content = json.dumps(doc, indent=4, separators=(",", ": "), sort_keys=True)
 
         buf.write(content)
 
@@ -1464,8 +1452,7 @@ class ResolvedContext(object):
 
         # write out the native context file
         context_code = executor.get_output()
-        encoding = {"encoding": "utf-8"} if six.PY3 else {}
-        with open(context_file, 'w', **encoding) as f:
+        with open(context_file, 'w', encoding="utf-8") as f:
             f.write(context_code)
 
         quiet = quiet or \
@@ -1545,9 +1532,10 @@ class ResolvedContext(object):
             data["patch_locks"] = dict((k, v.name) for k, v in self.patch_locks)
 
         if _add("package_orderers"):
-            package_orderers = [package_order.to_pod(x)
-                                for x in (self.package_orderers or [])]
-            data["package_orderers"] = package_orderers or None
+            if self.package_orderers:
+                data["package_orderers"] = self.package_orderers.to_pod()
+            else:
+                data["package_orderers"] = None
 
         if _add("package_filter"):
             data["package_filter"] = self.package_filter.to_pod()
@@ -1856,13 +1844,16 @@ class ResolvedContext(object):
                 not self.success:
             return
 
-        # see PackageCache.add_variants_async
+        # see PackageCache.add_variants
         if not system.is_production_rez_install:
             return
 
         pkgcache = self._get_package_cache()
         if pkgcache:
-            pkgcache.add_variants_async(self.resolved_packages)
+            pkgcache.add_variants(
+                self.resolved_packages,
+                self.package_cache_async,
+            )
 
     @classmethod
     def _init_context_tracking_payload_base(cls):
@@ -1884,7 +1875,7 @@ class ResolvedContext(object):
         # remove fields with unexpanded env-vars, or empty string
         def _del(value):
             return (
-                isinstance(value, basestring)
+                isinstance(value, str)
                 and (not value or ENV_VAR_REGEX.search(value))
             )
 
@@ -1995,8 +1986,8 @@ class ResolvedContext(object):
         executor.setenv("REZ_USED_VERSION", self.rez_version)
         executor.setenv("REZ_USED_TIMESTAMP", str(self.timestamp))
         executor.setenv("REZ_USED_REQUESTED_TIMESTAMP", req_timestamp_str)
-        executor.setenv("REZ_USED_REQUEST", request_str)
-        executor.setenv("REZ_USED_IMPLICIT_PACKAGES", implicit_str)
+        executor.setenv("REZ_USED_REQUEST", literal(request_str))
+        executor.setenv("REZ_USED_IMPLICIT_PACKAGES", literal(implicit_str))
         executor.setenv("REZ_USED_RESOLVE", resolve_str)
         executor.setenv("REZ_USED_PACKAGES_PATH", package_paths_str)
 

@@ -5,8 +5,6 @@
 """
 test dependency resolving algorithm
 """
-from __future__ import print_function
-
 import rez.exceptions
 from rez.version import Requirement
 from rez.solver import Solver, Cycle, SolverStatus
@@ -257,6 +255,23 @@ class TestSolver(TestBase):
 
         config.override("error_on_missing_variant_requires", False)
         self._solve(["missing_variant_requires"], ["nada[]", "missing_variant_requires-1[1]"])
+
+    def test_13_resolve_weakly_reference_requires(self):
+        """Test resolving a package with a weakly referenced requirement."""
+        self._solve(["test_weakly_reference_requires", "test_variant_split_mid2-2"],
+                    ['test_weakly_reference_requires-2.0[]',
+                     'test_variant_split_end-3.0[0]',
+                     'test_variant_split_mid2-2.0[1]'])
+
+    def test_14_resolve_weakly_reference_variant(self):
+        """Test resolving a package with a weakly referenced variant."""
+        self._solve(["test_weakly_reference_variant-2.0", "test_variant_split_mid2-2", "pyfoo"],
+                    ['test_variant_split_end-1.0[1]',
+                     'test_variant_split_mid1-1.0[1]',
+                     'test_weakly_reference_variant-2.0[0]',
+                     'test_variant_split_mid2-2.0[0]',
+                     'python-2.6.8[]',
+                     'pyfoo-3.1.0[]'])
 
 
 if __name__ == '__main__':

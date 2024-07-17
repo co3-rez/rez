@@ -33,16 +33,16 @@ data load is avoided.
 
 See the 'pets' unit test in tests/test_resources.py for a complete example.
 """
+from functools import lru_cache
+
 from rez.utils.data_utils import cached_property, AttributeForwardMeta, \
     LazyAttributeMeta
 from rez.config import config
 from rez.exceptions import ResourceError
-from rez.backport.lru_cache import lru_cache
 from rez.utils.logging_ import print_debug
-from rez.vendor.six import six
 
 
-class Resource(six.with_metaclass(LazyAttributeMeta, object)):
+class Resource(object, metaclass=LazyAttributeMeta):
     """Abstract base class for a data resource.
 
     A resource is an object uniquely identified by a 'key' (the resource type),
@@ -234,7 +234,7 @@ class ResourcePool(object):
         return resource_class(resource_handle.variables)
 
 
-class ResourceWrapper(six.with_metaclass(AttributeForwardMeta, object)):
+class ResourceWrapper(object, metaclass=AttributeForwardMeta):
     """An object that wraps a resource instance.
 
     A resource wrapper is useful for two main reasons. First, we can wrap

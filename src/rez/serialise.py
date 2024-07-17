@@ -6,12 +6,14 @@
 Read and write data from file. File caching via a memcached server is supported.
 """
 from contextlib import contextmanager
+from enum import Enum
 from inspect import isfunction, ismodule
 import sys
 import stat
 import os
 import os.path
 import threading
+from io import StringIO
 
 from rez.package_resources import package_rex_keys
 from rez.utils.scope import ScopeContext
@@ -21,12 +23,9 @@ from rez.utils.data_utils import ModifyList
 from rez.exceptions import ResourceError, InvalidPackageError
 from rez.utils.memcached import memcached
 from rez.utils.execution import add_sys_paths
-from rez.utils import py23
+from rez.util import get_function_arg_names
 from rez.config import config
 from rez.vendor.atomicwrites import atomic_write
-from rez.vendor.enum import Enum
-from rez.vendor.six.six.moves import StringIO
-from rez.vendor.six.six import PY3
 from rez.vendor import yaml
 
 
@@ -68,7 +67,6 @@ def open_file_for_write(filepath, mode=None):
     filepath = os.path.realpath(filepath)
     tmpdir = tmpdir_manager.mkdtemp()
     cache_filepath = os.path.join(tmpdir, os.path.basename(filepath))
-    encoding = {"encoding": "utf-8"} if PY3 else {}
 
     debug_print("Writing to %s (local cache of %s)", cache_filepath, filepath)
 
@@ -85,7 +83,7 @@ def open_file_for_write(filepath, mode=None):
     # try atomic write, but that can sometimes fail. See #858
     written = False
     try:
-        with atomic_write(filepath, overwrite=True, **encoding) as f:
+        with atomic_write(filepath, overwrite=True, encoding="utf-8") as f:
             f.write(content)
         written = True
     except:
@@ -93,14 +91,14 @@ def open_file_for_write(filepath, mode=None):
 
     # fallback to standard write
     if not written:
-        with open(filepath, 'w', **encoding) as f:
+        with open(filepath, 'w', encoding="utf-8") as f:
             f.write(content)
 
     if mode is not None:
         os.chmod(filepath, mode)
 
     # write the local fs cache copy
-    with open(cache_filepath, 'w', **encoding) as f:
+    with open(cache_filepath, 'w', encoding="utf-8") as f:
         f.write(content)
 
     file_cache[filepath] = cache_filepath
@@ -334,7 +332,7 @@ def process_python_objects(data, filepath=None):
                 fn.__globals__.update(get_objects())
 
                 # execute the function
-                args = py23.get_function_arg_names(func)
+                args = get_function_arg_names(func)
 
                 if len(args) not in (0, 1):
                     raise ResourceError("@early decorated function must "

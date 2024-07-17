@@ -6,26 +6,19 @@
 This script uses venv/virtualenv to create a standalone, production-ready Rez
 installation in the specified directory.
 """
-from __future__ import print_function
-
 import argparse
 import os
+import platform
 import sys
 import shutil
 import subprocess
 
-if sys.version_info[:2] < (3, 7):
-    sys.stderr.write(
-        'Error: rez can only be installed with python greater or equal to 3.7. You are trying to install using Python {0}.{1}.{2} ({3}).\n'.format(
-            sys.version_info[0],
-            sys.version_info[1],
-            sys.version_info[2],
-            sys.executable,
-        )
-    )
-    exit(1)
-
-import venv
+USE_VIRTUALENV = False
+try:
+    import venv
+except ImportError:
+    USE_VIRTUALENV = True
+    import virtualenv
 
 
 source_path = os.path.dirname(os.path.realpath(__file__))
@@ -41,15 +34,36 @@ from rez.cli._entry_points import get_specifications  # noqa: E402
 from rez.vendor.distlib.scripts import ScriptMaker  # noqa: E402
 
 
-def create_virtual_environment(dest_dir):
-    builder = venv.EnvBuilder(with_pip=True)
-    builder.create(dest_dir)
+def create_virtual_environment(dest_dir: str) -> None:
+    """Create a virtual environment in the given directory.
+
+    Args:
+        dest_dir (str): Full path to the virtual environment directory.
+
+    """
+    if USE_VIRTUALENV:
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "virtualenv", dest_dir],
+                check=True
+            )
+        except subprocess.CalledProcessError as err:
+            print(f"Failed to create virtual environment: {err}")
+            sys.exit(1)
+    else:
+        builder = venv.EnvBuilder(with_pip=True)
+        builder.create(dest_dir)
 
 
-def get_virtualenv_bin_dir(dest_dir):
-    builder = venv.EnvBuilder()
-    context = builder.ensure_directories(dest_dir)
-    return context.bin_path
+def get_virtualenv_bin_dir(dest_dir: str) -> str:
+    """Get the bin directory of the virtual environment.
+
+    Args:
+        dest_dir (str): The directory of the virtual environment.
+
+    """
+    bin_dir = "Scripts" if platform.system() == "Windows" else "bin"
+    return os.path.join(dest_dir, bin_dir)
 
 
 def get_virtualenv_py_executable(dest_dir):
@@ -133,19 +147,19 @@ def copy_completion_scripts(dest_dir):
     return None
 
 
-def install(dest_dir, print_welcome=False):
+def install(dest_dir, print_welcome=False, editable=False):
     """Install rez into the given directory.
 
     Args:
         dest_dir (str): Full path to the install directory.
     """
-    print("installing rez to %s..." % dest_dir)
+    print("installing rez%s to %s..." % (" (editable mode)" if editable else "", dest_dir))
 
     # create the virtualenv
     create_virtual_environment(dest_dir)
 
     # install rez from source
-    install_rez_from_source(dest_dir)
+    install_rez_from_source(dest_dir, editable=editable)
 
     # patch the rez binaries
     patch_rez_binaries(dest_dir)
@@ -208,11 +222,15 @@ def install(dest_dir, print_welcome=False):
         print('')
 
 
-def install_rez_from_source(dest_dir):
+def install_rez_from_source(dest_dir, editable):
     _, py_executable = get_virtualenv_py_executable(dest_dir)
 
     # install via pip
-    run_command([py_executable, "-m", "pip", "install", "."])
+    args = [py_executable, "-m", "pip", "install"]
+    if editable:
+        args.append("-e")
+    args.append(".")
+    run_command(args)
 
 
 def install_as_rez_package(repo_path):
@@ -267,6 +285,11 @@ if __name__ == "__main__":
         "only (no cli tools), and DIR is expected to be the path to a rez "
         "package repository (and will default to ~/packages instead).")
     parser.add_argument(
+        "-e", "--editable", action="store_true",
+        help="Make the install an editable install (pip install -e). This should "
+        "only be used for development purposes"
+    )
+    parser.add_argument(
         "DIR", nargs='?',
         help="Destination directory. If '{version}' is present, it will be "
         "expanded to the rez version. Default: /opt/rez")
@@ -300,4 +323,4 @@ if __name__ == "__main__":
     if opts.as_rez_package:
         install_as_rez_package(dest_dir)
     else:
-        install(dest_dir, print_welcome=True)
+        install(dest_dir, print_welcome=True, editable=opts.editable)

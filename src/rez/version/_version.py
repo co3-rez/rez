@@ -2,7 +2,6 @@
 # Copyright Contributors to the Rez Project
 
 
-from __future__ import print_function
 from rez.version._util import VersionError, ParseException, _Common, \
     dedup
 from bisect import bisect_left
@@ -29,8 +28,11 @@ class _ReversedComparable(_Common):
     def __init__(self, value):
         self.value = value
 
+    def __eq__(self, other):
+        return self.value == other.value
+
     def __lt__(self, other):
-        return not (self.value < other.value)
+        return self.value > other.value
 
     def __gt__(self, other):
         return not (self < other or self == other)
@@ -42,7 +44,7 @@ class _ReversedComparable(_Common):
         return not self < other
 
     def __str__(self):
-        return "reverse(%s)" % str(self.value)
+        return f"reverse({self.value!r})"
 
     def __repr__(self):
         return "reverse(%r)" % self.value
@@ -391,11 +393,9 @@ class Version(_Comparable):
         except IndexError:
             raise IndexError("version token index out of range")
 
-    def __nonzero__(self):
+    def __bool__(self):
         """The empty version equates to False."""
         return bool(self.tokens)
-
-    __bool__ = __nonzero__  # py3 compat
 
     def __eq__(self, other):
         return isinstance(other, Version) and self.tokens == other.tokens

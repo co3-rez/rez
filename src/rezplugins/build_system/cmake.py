@@ -5,8 +5,6 @@
 """
 CMake-based build system
 """
-from __future__ import print_function
-
 from rez.build_system import BuildSystem
 from rez.build_process import BuildType
 from rez.resolved_context import ResolvedContext
@@ -17,15 +15,11 @@ from rez.utils.platform_ import platform_
 from rez.config import config
 from rez.utils.which import which
 from rez.vendor.schema.schema import Or
-from rez.vendor.six import six
 from rez.shells import create_shell
 import functools
 import os.path
 import sys
 import os
-
-
-basestring = six.string_types[0]
 
 
 class RezCMakeError(BuildSystemError):
@@ -62,9 +56,9 @@ class CMakeBuildSystem(BuildSystem):
     schema_dict = {
         "build_target": Or(*build_targets),
         "build_system": Or(*list(build_systems.keys())),
-        "cmake_args": [basestring],
-        "cmake_binary": Or(None, basestring),
-        "make_binary": Or(None, basestring)
+        "cmake_args": [str],
+        "cmake_binary": Or(None, str),
+        "make_binary": Or(None, str)
     }
 
     @classmethod
@@ -145,11 +139,6 @@ class CMakeBuildSystem(BuildSystem):
         cmd.append("-DREZ_BUILD_TYPE=%s" % build_type.name)
         cmd.append("-DREZ_BUILD_INSTALL=%d" % (1 if install else 0))
         cmd.extend(["-G", self.build_systems[self.cmake_build_system]])
-
-        if config.rez_1_cmake_variables and \
-                not config.disable_rez_1_compatibility and \
-                build_type == BuildType.central:
-            cmd.append("-DCENTRAL=1")
 
         # execute cmake within the build env
         _pr("Executing: %s" % ' '.join(cmd))

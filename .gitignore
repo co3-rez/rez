@@ -8,6 +8,7 @@ build/
 dist/
 htmlcov/
 .coverage
+coverage.xml
 *~
 docs/_build
 .DS_Store
@@ -20,3 +21,5 @@ __pycache__
 docs/source/api/
 docs/source/commands/
 __tests_pkg_repo/
+.idea/
+venv/

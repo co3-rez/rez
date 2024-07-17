@@ -2,8 +2,6 @@
 # Copyright Contributors to the Rez Project
 
 
-from __future__ import print_function, with_statement
-
 import fnmatch
 import os
 import os.path
@@ -15,12 +13,6 @@ try:
 except ImportError:
     print("install failed - requires setuptools", file=sys.stderr)
     sys.exit(1)
-
-
-if sys.version_info < (2, 7):
-    print("install failed - requires python v2.7 or greater", file=sys.stderr)
-    sys.exit(1)
-
 
 # carefully import some sourcefiles that are standalone
 source_path = os.path.dirname(os.path.realpath(__file__))
@@ -84,7 +76,6 @@ setup(
             find_files('*', 'data') +
             find_files('*.exe', 'vendor/distlib'),
         'rezplugins':
-            find_files('rezconfig', root='rezplugins') +
             find_files('*.cmake', 'build_system', root='rezplugins') +
             find_files('*', 'build_system/template_files', root='rezplugins'),
         'rezgui':
@@ -97,9 +88,13 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Software Development",
         "Topic :: System :: Software Distribution"
-    ]
+    ],
+    python_requires=">=3.7",
 )

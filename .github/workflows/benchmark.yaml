@@ -8,6 +8,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
 
+permissions:
+  contents: read
+
 jobs:
   run_benchmark:
     name: run_benchmark
@@ -22,13 +25,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup python ${{ matrix.python-version }}
-        uses: ./.github/actions/setup-python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
-          os: ubuntu-latest
 
       - name: Install Rez
         run: |
@@ -47,7 +49,7 @@ jobs:
         run: |
           python ./.github/scripts/validate_benchmark.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: "benchmark-result-${{ matrix.python-version }}"
           path: ./out
@@ -66,13 +68,13 @@ jobs:
       max-parallel: 1
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: "benchmark-result-${{ matrix.python-version }}"
           path: .
 
       - name: Checkout (release)
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         if: ${{ github.event_name =='release' }}
         with:
           ref: main
@@ -86,16 +88,15 @@ jobs:
           # token: "${{ secrets.GH_ACTION_TOKEN }}"
 
       - name: Checkout (pr)
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         if: ${{ github.event_name !='release' }}
         with:
           path: src
 
       - name: Setup python ${{ matrix.python-version }}
-        uses: ./src/.github/actions/setup-python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
-          os: ubuntu-latest
 
       # Note failing due to
       # https://github.com/actions/virtual-environments/issues/675
