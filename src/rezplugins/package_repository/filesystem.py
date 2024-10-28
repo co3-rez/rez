@@ -605,8 +605,7 @@ class FileSystemPackageRepository(PackageRepository):
         if not is_subdirectory(str(uri), prefix):
             return None
 
-        part = uri.relative_to(Path(prefix))  # eg 'mypkg/1.0.0/package.py'
-        parts = uri.parts
+        parts = uri.relative_to(Path(prefix)).parts  # eg (mypkg, 1.0.0, package.py)
         pkg_name = parts[0]
 
         if len(parts) == 2:
