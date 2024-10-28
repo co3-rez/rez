@@ -2,6 +2,10 @@
 
 <!-- start-here-sphinx-start-after -->
 
+## 2.114.2 (2024-12-28)
+
+- Fix package URIs being converted to lowercase in Windows, breaking package caching.
+
 ## 2.114.1 (2023-12-09)
 [Source](https://github.com/AcademySoftwareFoundation/rez/tree/2.114.1) | [Diff](https://github.com/AcademySoftwareFoundation/rez/compare/2.114.0...2.114.1)
 
