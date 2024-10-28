@@ -12,6 +12,7 @@ import stat
 import errno
 import time
 import shutil
+from pathlib import Path
 
 from rez.package_repository import PackageRepository
 from rez.package_resources import PackageFamilyResource, VariantResourceHelper, \
@@ -598,14 +599,13 @@ class FileSystemPackageRepository(PackageRepository):
         - /svr/packages/mypkg/package.py  # (unversioned package - rare)
         - /svr/packages/mypkg/package.py<1.0.0>  # ("combined" package type - rare)
         """
-        uri = os.path.normcase(uri)
+        uri = Path(uri)
 
         prefix = self.location + os.path.sep
-        if not is_subdirectory(uri, prefix):
+        if not is_subdirectory(str(uri), prefix):
             return None
 
-        part = uri[len(prefix):]  # eg 'mypkg/1.0.0/package.py'
-        parts = part.split(os.path.sep)
+        parts = uri.relative_to(Path(prefix)).parts  # eg (mypkg, 1.0.0, package.py)
         pkg_name = parts[0]
 
         if len(parts) == 2:

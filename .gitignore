@@ -16,6 +16,7 @@ LATEST_CHANGELOG.md
 __pycache__
 .git-commit-template
 .vscode/
+.idea/
 .venv/
 docs/source/api/
 docs/source/commands/
