@@ -18,9 +18,7 @@ from rez.utils.execution import Popen
 from rez.utils.platform_ import platform_
 from rez.utils.logging_ import print_error, print_warning
 from rez.util import dedup
-
-if platform_.name == "windows":
-    from ._utils.windows import get_syspaths_from_registry, to_posix_path
+from ._utils.windows import get_syspaths_from_registry
 
 
 class GitBash(Bash):
@@ -63,7 +61,8 @@ class GitBash(Bash):
                 "Git-bash executable has been detected at %s, but this is "
                 "probably not correct (google Windows Subsystem for Linux). "
                 "Consider adjusting your searchpath, or use rez config setting "
-                "plugins.shell.gitbash.executable_fullpath." % exepath
+                "plugins.shell.gitbash.executable_fullpath.",
+                exepath
             )
 
         exepath = exepath.replace("\\", "\\\\")
