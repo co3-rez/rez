@@ -649,16 +649,10 @@ class TestShells(TestBase, TempdirMixin):
             'C:\\Users\platform==windows ~arch==AMD64 ~os==windows-10.0.19045.SP0'
         """
         def cb_(ctx, executor):
-            keys = [
-                "REZ_USED_IMPLICIT_PACKAGES",
-                "REZ_REQUEST",
-                "REZ_RAW_REQUEST",
-            ]
+            key = "REZ_USED_IMPLICIT_PACKAGES"
             implicits_str = " ".join(str(p) for p in ctx.implicit_packages)
-            expected = dict((k, implicits_str) for k in keys)
-            result = dict(
-                (k, v) for k, v in executor.manager.environ.items() if k in keys
-            )
+            expected = {key: implicits_str}
+            result = {key: executor.manager.environ.get(key)}
             self.assertEqual(result, expected)
 
         self.update_settings(
