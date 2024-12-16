@@ -12,7 +12,7 @@ from rez.system import system
 from rez.utils.platform_ import platform_
 from rez.utils.execution import Popen
 from rez.util import shlex_join
-from .windows import get_syspaths_from_registry, to_windows_path
+from .windows import get_syspaths_from_registry
 
 
 class PowerShellBase(Shell):
