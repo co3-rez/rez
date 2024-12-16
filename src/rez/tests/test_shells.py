@@ -638,7 +638,7 @@ class TestShells(TestBase, TempdirMixin):
 
     @per_available_shell()
     def test_implicit_string_expansion(self, shell):
-        r"""Test variable expansions likely to contain version requirement strings.
+        r"""Test expansions in variable likely to contain version requirement strings.
 
         We're mainly testing for cases where `~` in implicit package strings could
         expand to the user home directory on Windows.
