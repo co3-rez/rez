@@ -435,7 +435,7 @@ class _PackageEntry(object):
 
             additional_key = []
             for request in variant.requires_list:
-                if not request.conflict and request.name not in names:
+                if not request.conflict and not request.ephemeral and request.name not in names:
                     orderer = get_orderer(request.name, orderers=self.solver.package_orderers)
                     range_key = orderer.sort_key(request.name, request.range)
                     additional_key.append((range_key, request.name))
