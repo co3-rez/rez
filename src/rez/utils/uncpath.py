@@ -34,7 +34,7 @@ from ctypes import wintypes
 import os
 import string
 
-from rez.backport.lru_cache import lru_cache
+from functools import lru_cache
 
 mpr = ctypes.WinDLL('mpr')
 
