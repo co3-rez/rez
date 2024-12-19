@@ -11,7 +11,6 @@ from rez.shells import Shell, log
 from rez.system import system
 from rez.utils.execution import Popen
 from rez.utils.platform_ import platform_
-from rez.vendor.six import six
 from ._utils.windows import get_syspaths_from_registry
 from functools import partial
 import os

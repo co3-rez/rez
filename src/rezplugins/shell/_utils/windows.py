@@ -3,7 +3,6 @@
 
 
 import os
-import re
 
 
 def get_syspaths_from_registry():
