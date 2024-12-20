@@ -11,7 +11,6 @@ from rez.config import config
 from rez.package_order import NullPackageOrder, PackageOrder, PerFamilyOrder, VersionSplitPackageOrder, \
     TimestampPackageOrder, SortedOrder, PackageOrderList, from_pod
 from rez.packages import iter_packages
-from rez.resolved_context import ResolvedContext
 from rez.tests.util import TestBase, TempdirMixin
 from rez.version import Version
 
