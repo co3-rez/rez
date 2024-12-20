@@ -49,18 +49,6 @@ class _BaseTestPackagesOrder(TestBase, TempdirMixin):
         pod = json.loads(json.dumps(orderer.to_pod()))  # roundtrip to JSON
         actual = orderer.__class__.from_pod(pod)
         self.assertEqual(orderer, actual)
-    
-    def _test_context_result(self, orderer, package_name, expected_order):
-        r = ResolvedContext(
-            [package_name, "pyvariants_eph"],
-            package_orderers=[orderer],
-            package_paths=self.settings.get("packages_path"),
-        )
-        resolved = [x.qualified_package_name for x in r.resolved_packages]
-        print(resolved)
-        print([x.name for x in r.resolved_ephemerals])
-        self.assertEqual(resolved, ['timestamped-1.1.1', 'python-2.7.0', 'pyvariants_eph-2'])
-
 
 
 class TestAbstractPackageOrder(TestBase):
@@ -243,12 +231,6 @@ class TestTimestampPackageOrder(_BaseTestPackagesOrder):
         orderer = TimestampPackageOrder(timestamp=3001)
         expected = ['1.1.0', '1.0.6', '1.0.5', '1.1.1', '1.2.0', '2.0.0', '2.1.0', '2.1.5']
         self._test_reorder(orderer, "timestamped", expected)
-    
-    def test_context_ordered_ephemeral_variants(self):
-        """Test entering a context that must sort requires with ephemeral variants."""
-        orderer = TimestampPackageOrder(timestamp=4001, rank=3)  # 1.1.1
-        expected = ['1.1.1', '1.1.0', '1.0.6', '1.0.5', '1.2.0', '2.0.0', '2.1.5', '2.1.0']
-        self._test_context_result(orderer, "timestamped", expected)
 
     def test_reorder_rank_3(self):
         """Validate reordering with a rank of 3."""

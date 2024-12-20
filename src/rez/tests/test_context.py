@@ -240,6 +240,23 @@ class TestContext(TestBase, TempdirMixin):
         )
         resolved = [x.qualified_package_name for x in r.resolved_packages]
         self.assertEqual(resolved, ['python-2.6.8', 'pyvariants-2'])
+    
+    def test_orderer_ephemeral_variants(self):
+        """Test that package orderers work when ephemeral requirements and variants are present."""
+        from rez.package_order import TimestampPackageOrder
+
+        orderer = TimestampPackageOrder(timestamp=100)
+        packages_path = [self.data_path("solver", "packages")]
+
+        r = ResolvedContext(
+            ["pyvariants_timestamped"],
+            package_orderers=[orderer],
+            package_paths=packages_path,
+        )
+        resolved = [x.qualified_package_name for x in r.resolved_packages]
+        print(resolved)
+        print([x.name for x in r.resolved_ephemerals])
+        self.assertEqual(set(resolved), set(['pyvariants_timestamped-2', 'pyvariants_eph-1', "python-2.7.0"]))
 
     def test_orderer_package_argument(self):
         """Test that the packages argument to an orderer gives expected results."""
