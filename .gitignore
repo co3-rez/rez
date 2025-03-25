@@ -18,6 +18,7 @@ __pycache__
 .vscode/
 .idea/
 .venv/
+venv/
 docs/source/api/
 docs/source/commands/
 __tests_pkg_repo/
