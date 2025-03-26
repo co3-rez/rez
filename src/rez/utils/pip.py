@@ -6,6 +6,7 @@
 Python packaging related utilities.
 """
 import os.path
+import re
 from email.parser import Parser
 
 import pkg_resources
