@@ -2,6 +2,10 @@
 
 <!-- start-here-sphinx-start-after -->
 
+## 2.114.3 (2025-03-25)
+
+- Normalize pypi package names when finding rez-pip installed dependency distributions (fixes Qt.py-1.4.2).
+
 ## 2.114.2 (2024-12-28)
 
 - Fix package URIs being converted to lowercase in Windows, breaking package caching.
