@@ -36,8 +36,8 @@ def platform_mapped(func):
         # Original result
         result = func(*args, **kwargs)
 
-        # The function name is used as primary key
-        entry = config.platform_map.get(func.__name__)
+        # The function name is used as primary key, except for "name", which is set to "platform".
+        entry = config.platform_map.get("platform" if func.__name__ == "name" else func.__name__)
         if entry:
             for key, value in entry.items():
                 result, changes = re.subn(key, value, result)

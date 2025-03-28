@@ -90,7 +90,7 @@ class TestShells(TestBase, TempdirMixin):
         if CI:
             if shell != "cmd":
                 return
-        elif platform_.name in ["linux", "darwin"] and shell == "pwsh":
+        elif platform_.system in ["linux", "darwin"] and shell == "pwsh":
             return
 
         config.override("enable_path_normalization", False)

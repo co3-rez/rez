@@ -195,7 +195,7 @@ class _ContextBundler(object):
 
     def _patch_libs(self):
         # TODO
-        if platform_.name in ("osx", "windows"):
+        if platform_.system in ("darwin", "windows"):
             return
 
         self._patch_libs_linux()

@@ -60,7 +60,7 @@ class TestContext(TestBase, TempdirMixin):
     # TODO make shell-dependent (wait until port to pytest)
     def test_execute_command(self):
         """Test command execution in context."""
-        if platform_.name == "windows":
+        if platform_.system == "windows":
             self.skipTest("This test does not run on Windows due to problems"
                           " with the automated binding of the 'hello_world'"
                           " executable.")

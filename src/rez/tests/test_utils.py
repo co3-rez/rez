@@ -13,7 +13,7 @@ from rez.tests.util import TestBase, platform_dependent
 from rez.utils import cygpath, filesystem
 from rez.utils.platform_ import Platform, platform_
 
-if platform_.name == "windows":
+if platform_.system == "windows":
     from rez.utils import uncpath
     uncpath_available = True
 else:
@@ -38,7 +38,7 @@ class TestCanonicalPath(TestBase):
             return False
 
     def test_win32_case_insensitive(self):
-        if platform_.name != 'windows':
+        if platform_.system != 'windows':
             self.skipTest('on linux/macos, `os.path.realpath()` treats windows '
                           'abspaths as relpaths, and prepends `os.getcwd()`')
         platform = self.CaseInsensitivePlatform()
@@ -47,7 +47,7 @@ class TestCanonicalPath(TestBase):
         self.assertEqual(path, expects)
 
     def test_unix_case_sensistive_platform(self):
-        if platform_.name == 'windows':
+        if platform_.system == 'windows':
             self.skipTest('on windows, `os.path.realpath()` treats unix abspaths '
                           'as relpaths, and prepends `os.getcwd()`')
         platform = self.CaseSensitivePlatform()
@@ -56,7 +56,7 @@ class TestCanonicalPath(TestBase):
         self.assertEqual(path, expects)
 
     def test_unix_case_insensistive_platform(self):
-        if platform_.name == 'windows':
+        if platform_.system == 'windows':
             self.skipTest('on windows, `os.path.realpath()` treats unix abspaths '
                           'as relpaths, and prepends `os.getcwd()`')
         platform = self.CaseInsensitivePlatform()

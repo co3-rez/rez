@@ -16,7 +16,7 @@ from rez.config import config
 from rez.utils import platform_
 from rez.utils.logging_ import print_debug
 
-if platform_.name == "windows":
+if platform_.system == "windows":
     from rez.utils import uncpath
     uncpath_available = True
 else:

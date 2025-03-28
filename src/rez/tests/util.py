@@ -357,7 +357,7 @@ def platform_dependent(platforms):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            if platform_.name in platforms:
+            if platform_.system in platforms:
                 return func(self, *args, **kwargs)
             else:
                 self.skipTest("Must be run on platform(s): %s" % platforms)

@@ -22,11 +22,20 @@ class System(object):
         return __version__
 
     @cached_property
+    def name(self):
+        """Get the current actual platform system name, in lowercase.
+
+        Returns:
+            The current system platform, ignoring platform map (windows, linux, darwin).
+        """
+        return platform_.system
+
+    @cached_property
     def platform(self):
         """Get the current platform.
 
         Returns:
-            The current platform (windows, linux, osx, etc).
+            The current mapped platform (windows, linux, osx, etc).
         """
         return platform_.name
 
