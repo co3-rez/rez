@@ -9,7 +9,7 @@ from rez.build_process import create_build_process
 from rez.build_system import create_build_system
 from rez.resolved_context import ResolvedContext
 from rez.shells import get_shell_class
-from rez.exceptions import BuildError, BuildContextResolveError,\
+from rez.exceptions import BuildError, BuildContextResolveError, \
     PackageFamilyNotFoundError
 import unittest
 from rez.tests.util import TestBase, TempdirMixin, find_file_in_path, \

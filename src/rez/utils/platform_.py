@@ -33,7 +33,7 @@ class Platform(object):
     def name(self):
         """Returns the name of the platform."""
         return self._name()
-    
+
     @cached_property
     @platform_mapped
     def arch(self):
