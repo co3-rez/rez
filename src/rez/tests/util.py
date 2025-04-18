@@ -9,7 +9,7 @@ from rez import module_root_path
 from rez.config import config, _create_locked_config
 from rez.shells import get_shell_types, get_shell_class
 from rez.system import system
-from rez.utils import platform_
+from rez.utils.platform_ import platform_
 import tempfile
 import threading
 import time

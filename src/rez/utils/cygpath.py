@@ -13,8 +13,8 @@ import posixpath
 import re
 
 from rez.config import config
-from rez.utils import platform_
 from rez.utils.logging_ import print_debug
+from rez.utils.platform_ import platform_
 
 if platform_.system == "windows":
     from rez.utils import uncpath
