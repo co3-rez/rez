@@ -6,6 +6,7 @@
 Python packaging related utilities.
 """
 import os.path
+import re
 from email.parser import Parser
 
 import pkg_resources
@@ -513,11 +514,19 @@ def convert_distlib_to_setuptools(installed_dist):
     Returns:
         `pkg_resources.DistInfoDistribution`: Equivalent setuptools dist object.
     """
+    def normalize(name):
+        """Convert an arbitrary string to a normalized package distribution name.
+
+        Following this normalization rule:
+        https://packaging.python.org/en/latest/specifications/name-normalization/#name-normalization
+        """
+        return re.sub(r"[-_.]+", "-", name).lower()
+
     path = os.path.dirname(installed_dist.path)
     setuptools_dists = pkg_resources.find_distributions(path)
 
     for setuptools_dist in setuptools_dists:
-        if setuptools_dist.key == pkg_resources.safe_name(installed_dist.key):
+        if normalize(setuptools_dist.key) == normalize(installed_dist.key):
             return setuptools_dist
 
     return None
