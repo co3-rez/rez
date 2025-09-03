@@ -246,10 +246,12 @@ def create_forwarding_script(filepath, module, func_name, *nargs, **kwargs):
     is used internally by Rez to dynamically create a script that uses Rez,
     even though the parent environment may not be configured to do so.
     """
+    from rez.config import config
     from rez.utils.platform_ import platform_
 
     if platform_.name == "windows" and \
-            os.path.splitext(filepath)[-1].lower() != ".cmd":
+            os.path.splitext(filepath)[-1].lower() != ".cmd" and \
+            config.default_shell != "gitbash":
         filepath += ".cmd"
 
     doc = dict(
