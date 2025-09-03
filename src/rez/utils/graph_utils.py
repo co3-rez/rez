@@ -272,7 +272,7 @@ def view_graph(graph_str, dest_file=None):
     from rez.system import system
     from rez.config import config
 
-    if (system.platform == "linux") and (not os.getenv("DISPLAY")):
+    if (system.name == "linux") and (not os.getenv("DISPLAY")):
         print("Unable to open display.", file=sys.stderr)
         sys.exit(1)
 

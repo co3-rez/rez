@@ -17,7 +17,7 @@ from rez.exceptions import PackageFamilyNotFoundError
 from rez.shells import create_shell
 from rez.resolved_context import ResolvedContext
 from rez.tests.util import TestBase, TempdirMixin, per_available_shell
-from rez.utils import platform_
+from rez.utils.platform_ import platform_
 from rez.utils.filesystem import canonical_path
 import unittest
 import subprocess
@@ -90,7 +90,7 @@ class TestShells(TestBase, TempdirMixin):
         if CI:
             if shell != "cmd":
                 return
-        elif platform_.name in ["linux", "darwin"] and shell == "pwsh":
+        elif platform_.system in ["linux", "darwin"] and shell == "pwsh":
             return
 
         config.override("enable_path_normalization", False)

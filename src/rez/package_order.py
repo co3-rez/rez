@@ -78,7 +78,7 @@ class NullPackageOrder(PackageOrder):
         return "{}"
 
     def __eq__(self, other):
-        return type(self) == type(other)
+        return isinstance(other, type(self))
 
     def to_pod(self):
         """
@@ -113,7 +113,7 @@ class SortedOrder(PackageOrder):
 
     def __eq__(self, other):
         return (
-            type(self) == type(other)
+            isinstance(other, type(self))
             and self.descending == other.descending
         )
 
@@ -173,7 +173,7 @@ class PerFamilyOrder(PackageOrder):
 
     def __eq__(self, other):
         return (
-            type(other) == type(self)
+            isinstance(other, type(self))
             and self.order_dict == other.order_dict
             and self.default_order == other.default_order
         )
@@ -282,7 +282,7 @@ class VersionSplitPackageOrder(PackageOrder):
 
     def __eq__(self, other):
         return (
-            type(other) == type(self)
+            isinstance(other, type(self))
             and self.first_version == other.first_version
         )
 
@@ -427,7 +427,7 @@ class TimestampPackageOrder(PackageOrder):
 
     def __eq__(self, other):
         return (
-            type(other) == type(self)
+            isinstance(other, type(self))
             and self.timestamp == other.timestamp
             and self.rank == other.rank
         )

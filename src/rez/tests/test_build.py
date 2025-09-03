@@ -9,7 +9,7 @@ from rez.build_process import create_build_process
 from rez.build_system import create_build_system
 from rez.resolved_context import ResolvedContext
 from rez.shells import get_shell_class
-from rez.exceptions import BuildError, BuildContextResolveError,\
+from rez.exceptions import BuildError, BuildContextResolveError, \
     PackageFamilyNotFoundError
 import unittest
 from rez.tests.util import TestBase, TempdirMixin, find_file_in_path, \
@@ -201,7 +201,7 @@ class TestBuild(TestBase, TempdirMixin):
     @install_dependent()
     def test_build_cmake(self):
         """Test a cmake-based package."""
-        if platform_.name == "windows":
+        if platform_.system == "windows":
             self.skipTest("This test does not run on Windows due to temporary"
                           "limitations of the cmake build_system plugin"
                           " implementation.")
@@ -211,7 +211,7 @@ class TestBuild(TestBase, TempdirMixin):
         self._test_build_translate_lib()
         self._test_build_sup_world()
 
-    @unittest.skipIf(platform_.name == "windows", "Skipping because make and GCC are not common on Windows")
+    @unittest.skipIf(platform_.system == "windows", "Skipping because make and GCC are not common on Windows")
     @program_dependent("make", "g++")
     def test_build_custom(self):
         """Test a make-based package that uses the custom_build attribute."""

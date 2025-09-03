@@ -19,10 +19,20 @@ from tempfile import gettempdir
 class Platform(object):
     """Abstraction of a platform.
     """
-    name = None
 
     def __init__(self):
         pass
+
+    @cached_property
+    def system(self):
+        """Returns the lowercase non-mapped name of the system OS."""
+        return platform.system().lower()
+
+    @cached_property
+    @platform_mapped
+    def name(self):
+        """Returns the name of the platform."""
+        return self._name()
 
     @cached_property
     @platform_mapped
@@ -115,6 +125,9 @@ class Platform(object):
 
     # -- implementation
 
+    def _name(self):
+        return platform.system().lower()
+
     def _arch(self):
         return platform.machine()
 
@@ -170,7 +183,7 @@ class Platform(object):
 
 
 # -----------------------------------------------------------------------------
-# Unix (Linux and OSX)
+# Unix (Linux and macOS)
 # -----------------------------------------------------------------------------
 
 class _UnixPlatform(Platform):
@@ -183,7 +196,6 @@ class _UnixPlatform(Platform):
 # -----------------------------------------------------------------------------
 
 class LinuxPlatform(_UnixPlatform):
-    name = "linux"
 
     def _os(self):
         """
@@ -406,11 +418,12 @@ class LinuxPlatform(_UnixPlatform):
 
 
 # -----------------------------------------------------------------------------
-# OSX
+# macOS
 # -----------------------------------------------------------------------------
 
-class OSXPlatform(_UnixPlatform):
-    name = "osx"
+class MacPlatform(_UnixPlatform):
+    def _name(self):
+        return "osx"
 
     def _os(self):
         release = platform.mac_ver()[0]
@@ -433,7 +446,7 @@ class OSXPlatform(_UnixPlatform):
     def _editor(self):
         return "open"
 
-    def _physical_cores_from_osx_sysctl(self):
+    def _physical_cores_from_mac_sysctl(self):
         import subprocess
         try:
             p = Popen(
@@ -451,7 +464,7 @@ class OSXPlatform(_UnixPlatform):
         return int(stdout.strip())
 
     def _physical_cores(self):
-        return self._physical_cores_from_osx_sysctl()
+        return self._physical_cores_from_mac_sysctl()
 
     def _difftool(self):
         from rez.util import which
@@ -463,7 +476,6 @@ class OSXPlatform(_UnixPlatform):
 # -----------------------------------------------------------------------------
 
 class WindowsPlatform(Platform):
-    name = "windows"
 
     def _arch(self):
         # http://stackoverflow.com/questions/7164843/in-python-how-do-you-determine-whether-the-kernel-is-running-in-32-bit-or-64-bi
@@ -570,6 +582,6 @@ name = platform.system().lower()
 if name == "linux":
     platform_ = LinuxPlatform()
 elif name == "darwin":
-    platform_ = OSXPlatform()
+    platform_ = MacPlatform()
 elif name == "windows":
     platform_ = WindowsPlatform()
