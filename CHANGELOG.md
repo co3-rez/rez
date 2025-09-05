@@ -2,6 +2,14 @@
 
 <!-- start-here-sphinx-start-after -->
 
+## 2.114.5 (2025-09-03)
+
+- Fix bug where configuring the default_shell to "gitbash" on Windows will create suite executables with .cmd extensions. Those do not work in a bash shell. They will now be created the same way as the other platforms, using a shebang.
+
+## 2.114.4 (2025-09-03)
+
+- Allow platform name remapping using config value platform_map.
+
 ## 2.114.3 (2025-03-25)
 
 - Normalize pypi package names when finding rez-pip installed dependency distributions (fixes Qt.py-1.4.2).
