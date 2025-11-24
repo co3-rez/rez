@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -71,7 +71,7 @@ jobs:
           path: .
 
       - name: Checkout (release)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         if: ${{ github.event_name =='release' }}
         with:
           ref: main
@@ -85,7 +85,7 @@ jobs:
           # token: "${{ secrets.GH_ACTION_TOKEN }}"
 
       - name: Checkout (pr)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         if: ${{ github.event_name !='release' }}
         with:
           path: src
