@@ -46,7 +46,7 @@ jobs:
         run: |
           python ./.github/scripts/validate_benchmark.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "benchmark-result-${{ matrix.python-version }}"
           path: ./out
